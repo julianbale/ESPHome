@@ -1,0 +1,63 @@
+esphome:
+  name: garagedoorleft
+  platform: ESP8266
+  board: d1_mini_pro
+    
+wifi:
+  ssid: "Your SSID"
+  password: "Your Wifi Password"
+
+web_server:
+  port: 80
+
+logger:
+
+api:
+  password: 'Your API Password'
+
+ota:
+  password: 'Your ESPHome Password'
+  
+sensor:
+  - platform: ultrasonic
+    id: ultrasonic_sensor
+    trigger_pin: D1
+    echo_pin: D2
+    name: "Garage Door Left"
+    update_interval: 15s
+    timeout: 2.0m
+
+switch:
+  - platform: gpio
+    id: door
+    pin: D5
+
+  - platform: gpio
+    id: strobe
+    pin: D6
+
+  - platform: template
+    name: "Garage Strobe"
+    icon: "mdi:alarm-light"
+    turn_on_action:
+    - switch.turn_on: strobe
+    - delay: 20s
+    - switch.turn_off: strobe
+    
+cover:
+  - platform: template
+    name: "Garage Left"
+    lambda: |-
+      if (id(ultrasonic_sensor).state < 0.25) {
+        return cover::COVER_OPEN;
+      } else {
+        return cover::COVER_CLOSED;
+      }
+    open_action:
+    - switch.turn_on: door
+    - delay: 500ms
+    - switch.turn_off: door
+    close_action:
+    - switch.turn_on: door
+    - delay: 500ms
+    - switch.turn_off: door
